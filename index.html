@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', Arial, Helvetica, sans-serif; background: #fff; min-height: 100vh; }
+
+/* ── ACCUEIL ── */
+#screen-welcome {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; padding: clamp(12px, 4vw, 30px);
+}
+.welcome-title { font-size: clamp(1.4rem, 5vw, 2.2rem); color: #3a7a10; margin-bottom: 6px; text-align: center; }
+.welcome-sub   { font-size: clamp(0.95rem, 3vw, 1.15rem); color: #5a7a30; margin-bottom: 16px; text-align: center; max-width: 400px; font-style: italic; }
+.welcome-qui   { font-size: clamp(1rem, 3.5vw, 1.2rem); color: #7a9a40; margin-bottom: 14px; font-weight: bold; }
+.consigne-visuelle {
+  display: flex; justify-content: center;
+  margin-bottom: 20px;
+  background: #fff9e0; border: 3px solid #f5c842;
+  border-radius: 20px; padding: 10px 20px;
+}
+.etiquettes {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: clamp(8px, 2vw, 14px); max-width: 560px; margin: 0 auto 20px; padding: 0 8px;
+}
+.etiquette {
+  padding: clamp(10px, 2.5vw, 16px) clamp(14px, 4vw, 28px);
+  border-radius: 16px; font-size: clamp(1.1rem, 4vw, 1.5rem);
+  font-weight: bold; cursor: pointer; border: 4px solid rgba(0,0,0,0.15);
+  font-family: Arial, Helvetica, sans-serif; text-transform: uppercase;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.15); transition: transform .1s;
+  color: #fff; letter-spacing: 2px;
+}
+.etiquette:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+
+/* ── JEU ── */
+#screen-game { display: none; padding-bottom: 20px; }
+.header { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 10px 10px 4px; flex-wrap: wrap; }
+.player-name-badge {
+  background: #fff9e0; border: 3px solid #f5c842; border-radius: 20px;
+  padding: 4px 14px; font-size: clamp(0.9rem, 3vw, 1.1rem); color: #e05010; font-weight: bold;
+}
+.level-dots { display: flex; gap: 6px; }
+.level-dot { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 3px solid #7dc840; }
+.level-dot.done    { background: #f5c000; border-color: #e0a000; }
+.level-dot.current { background: #e05010; border-color: #b03000; }
+
+.consigne-chiffre { font-size: clamp(2rem, 8vw, 2.8rem); font-weight: bold; line-height: 1; }
+.consigne-chiffre.green { color: #3a8a00; }
+.consigne-chiffre.red   { color: #c03000; }
+
+.game-area  { max-width: 680px; margin: 0 auto; padding: 0 8px; }
+.baskets-row{ display: flex; justify-content: center; gap: clamp(10px, 3vw, 20px); margin-bottom: 12px; flex-wrap: wrap; }
+.basket-wrap{ display: flex; flex-direction: column; align-items: center; }
+.consigne-above {
+  display: flex; justify-content: center; align-items: center;
+  width: clamp(140px, 42vw, 200px); min-height: 80px; margin-bottom: 6px;
+}
+.basket {
+  width: clamp(140px, 42vw, 200px); min-height: clamp(130px, 30vw, 180px);
+  border: 5px dashed #c87020; border-radius: 24px;
+  display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start;
+  gap: 6px; padding: 10px; position: relative;
+}
+.basket.green-b { background: transparent; border-color: #4a9010; }
+.basket.red-b   { background: transparent; border-color: #b03010; }
+.basket.over    { filter: brightness(1.08); border-style: solid; }
+.basket-count   { position: absolute; bottom: 6px; right: 8px; font-size: 1.2rem; font-weight: bold; color: rgba(0,0,0,0.25); }
+.apple-in-basket{ width: clamp(42px, 12vw, 58px); height: clamp(42px, 12vw, 58px); cursor: grab; user-select: none; touch-action: none; }
+.source-area {
+  padding: clamp(10px, 3vw, 16px); min-height: 90px; display: flex; flex-wrap: wrap;
+  justify-content: center; gap: clamp(8px, 3vw, 14px); margin-bottom: 12px;
+  background: transparent; border: none;
+}
+.apple-src { width: clamp(54px, 16vw, 72px); height: clamp(54px, 16vw, 72px); cursor: grab; user-select: none; touch-action: none; }
+.apple-src.dragging { opacity: .35; }
+.feedback-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: clamp(12px, 4vw, 24px); margin-bottom: 10px;
+}
+.smiley { font-size: clamp(3rem, 10vw, 5rem); min-width: 60px; text-align: center; }
+.btn-visual { display: flex; flex-direction: column; align-items: center; background: none; border: none; cursor: pointer; }
+.btn-visual:active { transform: scale(.92); }
+.btn-circle {
+  width: clamp(60px, 16vw, 80px); height: clamp(60px, 16vw, 80px);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: clamp(1.8rem, 5vw, 2.5rem); box-shadow: 0 5px 0 rgba(0,0,0,0.18);
+}
+.btn-check-c{ background: #5dc030; }
+.btn-reset-c{ background: #f08030; }
+.btn-next-c { background: #3090e0; }
+
+/* ── RÉCAP ── */
+#screen-recap { display: none; max-width: 600px; margin: 0 auto; padding: clamp(16px, 4vw, 30px); }
+.recap-title { text-align: center; font-size: clamp(1.4rem, 5vw, 2rem); color: #3a7a10; margin-bottom: 6px; }
+.recap-sub   { text-align: center; color: #888; font-size: .9rem; margin-bottom: 16px; }
+.recap-name  { text-align: center; font-size: clamp(1.2rem, 4vw, 1.6rem); color: #e05010; font-weight: bold; margin-bottom: 16px; }
+.recap-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: clamp(0.8rem, 2.5vw, 1rem); }
+.recap-table th { background: #3a7a10; color: #fff; padding: 8px 10px; }
+.recap-table td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; text-align: center; }
+.recap-table tr:nth-child(even) td { background: #f6fff0; }
+.recap-ok { color: #3a8a00; font-size: 1.2rem; }
+.recap-ko { color: #c03000; font-size: 1.2rem; }
+.recap-score { text-align: center; font-size: clamp(1rem, 3.5vw, 1.4rem); color: #3a7a10; font-weight: bold; margin-bottom: 16px; }
+.recap-btns { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.btn-print  { padding: 10px 22px; background: #3090e0; color: #fff; border: none; border-radius: 30px; font-size: clamp(0.9rem, 3vw, 1.1rem); font-family: inherit; cursor: pointer; font-weight: bold; }
+.btn-replay { padding: 10px 22px; background: #5dc030; color: #fff; border: none; border-radius: 30px; font-size: clamp(0.9rem, 3vw, 1.1rem); font-family: inherit; cursor: pointer; font-weight: bold; }
+
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 28px; padding: 24px 30px; text-align: center; max-width: 90vw; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.modal-emoji { font-size: clamp(3rem, 10vw, 5rem); }
+.modal-stars { font-size: clamp(1.8rem, 6vw, 2.5rem); margin: 10px 0; }
+.modal-btn { margin-top: 14px; width: clamp(60px, 16vw, 80px); height: clamp(60px, 16vw, 80px); border-radius: 50%; border: none; background: #5dc030; font-size: clamp(1.8rem, 5vw, 2.5rem); cursor: pointer; }
+
+@media (max-width: 400px) {
+  .baskets-row { gap: 8px; }
+  .basket { width: 44vw; min-height: 28vw; padding: 8px; }
+  .consigne-above { width: 44vw; min-height: 70px; }
+}
+
+@media print {
+  #screen-welcome, #screen-game, .recap-btns { display: none !important; }
+  #screen-recap { display: block !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ACCUEIL -->
+<div id="screen-welcome">
+  <div class="welcome-title">🍎 Les pommes du jardin 🌿</div>
+  <p class="welcome-sub">Mets le nombre de pommes demandées dans chaque panier</p>
+  <div class="loading-msg" id="loadingMsg">Chargement des prénoms...</div>
+  <p class="welcome-qui">Qui joue aujourd'hui ?</p>
+  <div class="etiquettes" id="etiquettes"></div>
+</div>
+
+<!-- JEU -->
+<div id="screen-game">
+  <div class="header">
+    <div style="font-size:2.8rem">🍎</div>
+    <div class="player-name-badge" id="playerBadge"></div>
+    <div class="level-dots" id="levelDots"></div>
+    <div style="font-size:2.8rem">🌿</div>
+  </div>
+  <div class="game-area">
+    <div class="baskets-row">
+      <div class="basket-wrap">
+        <div class="consigne-above" id="consigneA"></div>
+        <div class="basket green-b" id="basketA"
+          ondragover="dragOver(event,'A')" ondragleave="dragLeave('A')" ondrop="dropToBasket(event,'A')">
+          <span class="basket-count" id="cntA"></span>
+          <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:4.5rem;pointer-events:none;opacity:0.35">🧺</div>
+        </div>
+      </div>
+      <div class="basket-wrap">
+        <div class="consigne-above" id="consigneB"></div>
+        <div class="basket red-b" id="basketB"
+          ondragover="dragOver(event,'B')" ondragleave="dragLeave('B')" ondrop="dropToBasket(event,'B')">
+          <span class="basket-count" id="cntB"></span>
+          <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:4.5rem;pointer-events:none;opacity:0.35">🧺</div>
+        </div>
+      </div>
+    </div>
+    <div class="source-area" id="sourceApples"
+      ondragover="event.preventDefault()" ondrop="dropToSource(event)"></div>
+    <div class="feedback-row">
+      <button class="btn-visual" onclick="checkAnswer()">
+        <div class="btn-circle btn-check-c">✅</div>
+      </button>
+      <button class="btn-visual" onclick="resetLevel()">
+        <div class="btn-circle btn-reset-c">🔄</div>
+      </button>
+      <button class="btn-visual" id="btnNext" onclick="nextLevel()" style="display:none">
+        <div class="btn-circle btn-next-c">➡️</div>
+      </button>
+      <div class="smiley" id="smiley"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RÉCAP -->
+<div id="screen-recap">
+  <div class="recap-title">🎉 Bravo !</div>
+  <div class="recap-name" id="recapName"></div>
+  <div class="recap-sub" id="recapDate"></div>
+  <div class="recap-score" id="recapScore"></div>
+  <table class="recap-table">
+    <thead><tr><th>Niveau</th><th>Panier 🟢</th><th>Panier 🔴</th><th>Résultat</th><th>Essais</th></tr></thead>
+    <tbody id="recapBody"></tbody>
+  </table>
+  <div class="recap-btns">
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn-replay" onclick="restartGame()">🔁 Rejouer</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalEnd">
+  <div class="modal">
+    <div class="modal-emoji">🥳</div>
+    <div class="modal-stars">⭐⭐⭐</div>
+    <button class="modal-btn" onclick="showRecap()">📋</button>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxun4iQnWA0RuW4NzNScd13BynZ2ybb8o0sIobzPBjEDj2cP-t6vdMtigf5tm355r3u/exec';
+const LEVELS = [{a:4,b:0},{a:3,b:1},{a:2,b:2},{a:1,b:3},{a:0,b:4}];
+const APPLE_COLORS = ['#dd2010','#cc1808','#e03020','#d01808'];
+const COULEURS = ['#e05010','#3a8a00','#3090e0','#c03090','#e0a000','#7040c0','#008080','#c03000','#2060a0','#806000'];
+
+let playerName = '', currentLevel = 0, dragSrcId = null, tries = 0;
+let apples = [], results = [];
+
+// ── Chargement des prénoms ────────────────────────────────────────────────
+function chargerEleves() {
+  fetch(SCRIPT_URL + '?action=getEleves')
+    .then(r => r.json())
+    .then(prenoms => {
+      document.getElementById('loadingMsg').style.display = 'none';
+      const container = document.getElementById('etiquettes');
+      container.innerHTML = '';
+      prenoms.forEach((prenom, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'etiquette';
+        btn.textContent = prenom;
+        btn.style.background = COULEURS[i % COULEURS.length];
+        btn.onclick = () => { playerName = prenom; startGame(); };
+        container.appendChild(btn);
+      });
+    })
+    .catch(() => {
+      document.getElementById('loadingMsg').textContent = '⚠️ Impossible de charger les prénoms.';
+    });
+}
+
+// ── Démarrage ─────────────────────────────────────────────────────────────
+function startGame() {
+  document.getElementById('screen-welcome').style.display = 'none';
+  document.getElementById('screen-game').style.display = 'block';
+  document.getElementById('playerBadge').textContent = '👤 ' + playerName;
+  currentLevel = 0; results = [];
+  initApples(); buildConsigne(LEVELS[0]); buildLevelDots(); renderApples();
+  document.getElementById('smiley').textContent = '';
+  document.getElementById('btnNext').style.display = 'none';
+}
+
+// ── Dé ────────────────────────────────────────────────────────────────────
+function dotGrid(n, color) {
+  const layouts = {0:[],1:[[1,1]],2:[[0,0],[2,2]],3:[[0,0],[1,1],[2,2]],4:[[0,0],[2,0],[0,2],[2,2]]};
+  const pts = layouts[n]||[], cell=20, off=12;
+  const circles = pts.map(([cx,cy])=>`<circle cx="${off+cx*cell}" cy="${off+cy*cell}" r="8" fill="${color}"/>`).join('');
+  return `<svg width="64" height="64" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="12" fill="white" stroke="${color}" stroke-width="3"/>${circles}</svg>`;
+}
+
+function buildConsigne(lv) {
+  const useDot = Math.random() < 0.5;
+  const greenRepr = useDot ? dotGrid(lv.a,'#3a8a00') : `<div class="consigne-chiffre green">${lv.a}</div>`;
+  const redRepr   = useDot ? dotGrid(lv.b,'#c03000') : `<div class="consigne-chiffre red">${lv.b}</div>`;
+  document.getElementById('consigneA').innerHTML = greenRepr;
+  document.getElementById('consigneB').innerHTML = redRepr;
+}
+
+function buildLevelDots() {
+  const c = document.getElementById('levelDots'); c.innerHTML='';
+  LEVELS.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='level-dot'+(i<currentLevel?' done':i===currentLevel?' current':'');
+    c.appendChild(d);
+  });
+}
+
+// ── Pommes ────────────────────────────────────────────────────────────────
+function initApples() {
+  apples = Array.from({length:4},(_,i)=>({id:'a'+i,color:APPLE_COLORS[i],location:'source'}));
+  tries = 0;
+}
+
+function appleSVG(color, size) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 66" width="${size}" height="${size}">
+    <path d="M30 12C17 12 7 24 7 38C7 54 18 65 30 65C42 65 53 54 53 38C53 24 43 12 30 12Z" fill="${color}"/>
+    <path d="M30 12C30 12 27 2 20 0C27 5 30 12 30 12Z" fill="#2d6b00"/>
+    <path d="M30 12C32 6 38 3 43 5" stroke="#2d6b00" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="20" cy="29" rx="6" ry="9" fill="rgba(255,255,255,0.28)" transform="rotate(-15,20,29)"/></svg>`;
+}
+
+function renderApples() {
+  const src = document.getElementById('sourceApples'); src.innerHTML='';
+  apples.filter(a=>a.location==='source').forEach(a=>{
+    const el=document.createElement('div');
+    el.id=a.id; el.className='apple-src'; el.draggable=true;
+    el.innerHTML=appleSVG(a.color,72);
+    el.addEventListener('dragstart',()=>{dragSrcId=a.id;el.classList.add('dragging');});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+    addTouchDrag(el,a.id,72); src.appendChild(el);
+  });
+  ['A','B'].forEach(k=>{
+    const basket=document.getElementById('basket'+k);
+    basket.querySelectorAll('.apple-in-basket').forEach(e=>e.remove());
+    apples.filter(a=>a.location===k).forEach(a=>{
+      const el=document.createElement('div');
+      el.id=a.id; el.className='apple-in-basket'; el.draggable=true;
+      el.innerHTML=appleSVG(a.color,58);
+      el.addEventListener('dragstart',()=>{dragSrcId=a.id;});
+      addTouchDrag(el,a.id,58); basket.appendChild(el);
+    });
+    const cnt=apples.filter(a=>a.location===k).length;
+    document.getElementById('cnt'+k).textContent=cnt||'';
+  });
+}
+
+// ── Drag souris ───────────────────────────────────────────────────────────
+function dragOver(e,k){e.preventDefault();document.getElementById('basket'+k).classList.add('over');}
+function dragLeave(k){document.getElementById('basket'+k).classList.remove('over');}
+function dropToBasket(e,k){
+  e.preventDefault();document.getElementById('basket'+k).classList.remove('over');
+  if(!dragSrcId)return;
+  apples.find(a=>a.id===dragSrcId).location=k; dragSrcId=null; renderApples();
+}
+function dropToSource(e){
+  e.preventDefault();
+  if(!dragSrcId)return;
+  apples.find(a=>a.id===dragSrcId).location='source'; dragSrcId=null; renderApples();
+}
+
+// ── Touch ─────────────────────────────────────────────────────────────────
+function addTouchDrag(el,id,sz){
+  let clone=null;
+  el.addEventListener('touchstart',e=>{
+    dragSrcId=id; const t=e.touches[0],h=sz/2;
+    clone=el.cloneNode(true);
+    clone.style.cssText=`position:fixed;z-index:999;pointer-events:none;opacity:0.85;width:${sz}px;height:${sz}px;left:${t.clientX-h}px;top:${t.clientY-h}px`;
+    document.body.appendChild(clone); e.preventDefault();
+  },{passive:false});
+  el.addEventListener('touchmove',e=>{
+    const t=e.touches[0],h=sz/2;
+    if(clone){clone.style.left=(t.clientX-h)+'px';clone.style.top=(t.clientY-h)+'px';}
+    e.preventDefault();
+  },{passive:false});
+  el.addEventListener('touchend',e=>{
+    if(clone){document.body.removeChild(clone);clone=null;}
+    const t=e.changedTouches[0];
+    const target=document.elementFromPoint(t.clientX,t.clientY);
+    const basket=target&&target.closest('.basket');
+    const srcEl=target&&target.closest('.source-area');
+    const ap=apples.find(a=>a.id===dragSrcId);
+    if(ap){if(basket)ap.location=basket.id.replace('basket','');else if(srcEl)ap.location='source';}
+    dragSrcId=null; renderApples(); e.preventDefault();
+  },{passive:false});
+}
+
+// ── Logique jeu ───────────────────────────────────────────────────────────
+function checkAnswer(){
+  const lv=LEVELS[currentLevel];
+  const cA=apples.filter(a=>a.location==='A').length;
+  const cB=apples.filter(a=>a.location==='B').length;
+  tries++;
+  if(cA+cB<4){document.getElementById('smiley').textContent='😕';return;}
+  if(cA===lv.a&&cB===lv.b){
+    document.getElementById('smiley').textContent='😄';
+    results.push({level:currentLevel+1,a:lv.a,b:lv.b,success:true,tries});
+    document.getElementById('btnNext').style.display='flex';
+    sendResults(true);
+  } else {
+    document.getElementById('smiley').textContent='😞';
+  }
+}
+
+function resetLevel(){
+  initApples(); renderApples();
+  document.getElementById('smiley').textContent='';
+  document.getElementById('btnNext').style.display='none';
+}
+
+function nextLevel(){
+  currentLevel++;
+  if(currentLevel>=LEVELS.length){
+    document.getElementById('modalEnd').classList.add('show');
+    return;
+  }
+  tries=0; initApples();
+  buildConsigne(LEVELS[currentLevel]); buildLevelDots(); renderApples();
+  document.getElementById('smiley').textContent='';
+  document.getElementById('btnNext').style.display='none';
+}
+
+// ── Google Sheets ─────────────────────────────────────────────────────────
+function fmtResult(sorted,lvl){
+  const r=sorted.find(x=>x.level===lvl);
+  if(!r)return'—';
+  return(r.success?'✅':'❌')+' '+r.tries+' essai'+(r.tries>1?'s':'');
+}
+
+function sendResults(partial){
+  if(!playerName)return;
+  const now=new Date();
+  const ok=results.filter(r=>r.success).length;
+  const sorted=[...results].sort((a,b)=>a.level-b.level);
+  const params=new URLSearchParams({
+    prenom:playerName,
+    date:now.toLocaleDateString('fr-FR'),
+    heure:now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+    score:partial?`${ok}/${LEVELS.length} (en cours)`:`${ok}/${LEVELS.length}`,
+    niv1:fmtResult(sorted,1),niv2:fmtResult(sorted,2),niv3:fmtResult(sorted,3),
+    niv4:fmtResult(sorted,4),niv5:fmtResult(sorted,5)
+  });
+  fetch(SCRIPT_URL+'?'+params.toString(),{method:'GET',mode:'no-cors'}).catch(()=>{});
+}
+
+// ── Récap ─────────────────────────────────────────────────────────────────
+function showRecap(){
+  document.getElementById('modalEnd').classList.remove('show');
+  document.getElementById('screen-game').style.display='none';
+  document.getElementById('screen-recap').style.display='block';
+  document.getElementById('recapName').textContent='👤 '+playerName;
+  const now=new Date();
+  document.getElementById('recapDate').textContent=now.toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const ok=results.filter(r=>r.success).length;
+  document.getElementById('recapScore').textContent=`Score : ${ok} / ${LEVELS.length} niveaux réussis ⭐`;
+  const tbody=document.getElementById('recapBody'); tbody.innerHTML='';
+  const sorted=[...results].sort((a,b)=>a.level-b.level);
+  sorted.forEach(r=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>Niveau ${r.level}</td><td>${r.a} 🟢</td><td>${r.b} 🔴</td>
+      <td class="${r.success?'recap-ok':'recap-ko'}">${r.success?'✅':'❌'}</td>
+      <td>${r.tries} essai${r.tries>1?'s':''}</td>`;
+    tbody.appendChild(tr);
+  });
+  sendResults(false);
+}
+
+function restartGame(){
+  playerName='';
+  document.getElementById('screen-recap').style.display='none';
+  document.getElementById('screen-welcome').style.display='flex';
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+chargerEleves();
+</script>
+</body>
+</html>
